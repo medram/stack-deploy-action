@@ -1,0 +1,113 @@
+name: "Stack Deploy Action"
+authors:
+  - "Mohammed Ramouchy <mramouchy@example.com>"
+description: "GitHub Action to deploy Docker Swarm stacks"
+inputs:
+  host:
+    description: "The SSH host or IP address of the Swarm manager"
+    required: true
+  ssh_key:
+    description: "SSH private key for authentication"
+    required: false
+  user:
+    description: "SSH username"
+    required: false
+    default: "root"
+  port:
+    description: "SSH port"
+    required: false
+    default: "22"
+  pass:
+    description: "SSH password"
+    required: false
+    default: ""
+  stack_name:
+    description: "The name of the Docker Swarm stack"
+    required: true
+  stack_file:
+    description: "The path to the Docker Compose file"
+    required: false
+    default: "docker-compose.yml"
+  prune:
+    description: "Whether to prune services not defined in the stack file"
+    required: false
+    default: "true"
+  resolve_image:
+    options:
+      - "changed"
+      - "always"
+      - "never"
+    description: "Image resolution strategy (e.g., 'changed', 'always', 'never')"
+    required: false
+    default: "changed"
+  env_files:
+    description: "Additional environment files to load"
+    required: false
+    default: ""
+  args:
+    description: "Additional arguments for the docker stack deploy command"
+    required: false
+    default: ""
+  sync_path:
+    description: "The target path on the remote server to sync files to"
+    required: false
+    default: "/tmp/stack-deploy-action/${{ github.event.repository.name }}"
+  registry_auth:
+    description: "Whether to use registry authentication"
+    required: false
+    default: "true"
+  registry_host:
+    description: "Docker registry host for authentication"
+    required: false
+    default: "docker.io"
+  registry_user:
+    description: "Docker registry username"
+    required: false
+    default: ""
+  registry_pass:
+    description: "Docker registry password"
+    required: false
+    default: ""
+  summary:
+    description: "Whether to add a deployment summary to the GitHub Actions step summary"
+    required: false
+    default: "true"
+  cleanup_sync_folder:
+    description: "Whether to clean up the synced files on the remote server after deployment"
+    required: false
+    default: "true"
+  sync_files:
+    description: "Whether to sync files to the remote server before deployment"
+    required: false
+    default: "true"
+
+
+runs:
+  using: "composite"
+  steps:
+    - name: Sync files to remote server
+      if: ${{ inputs.sync_path != '' && inputs.sync_files != 'false' }}
+      uses: appleboy/scp-action@v1.0.0
+      with:
+        host: ${{ inputs.host }}
+        username: ${{ inputs.user }}
+        password: ${{ inputs.pass }}
+        port: ${{ inputs.port }}
+        key: ${{ inputs.ssh_key }}
+        source: ./
+        target: ${{ inputs.sync_path }}
+
+    - name: "Deploy Docker Swarm Stack"
+      uses: appleboy/ssh-action@v1.2.3
+      with:
+        host: ${{ inputs.host }}
+        port: ${{ inputs.port }}
+        username: ${{ inputs.user }}
+        password: ${{ inputs.pass }}
+        key: ${{ inputs.ssh_key }}
+        script_path: ./scripts/remote-commands.sh
+
+    - name: "Deployment Summary"
+      if: ${{ inputs.summary == 'true' }}
+      shell: bash
+      run: ./scripts/summary.sh
