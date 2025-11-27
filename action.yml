@@ -2,6 +2,10 @@ name: "Stack Deploy Action"
 authors:
   - "Mohammed Ramouchy <mramouchy@example.com>"
 description: "GitHub Action to deploy Docker Swarm stacks"
+branding:
+  icon: box
+  color: blue
+
 inputs:
   host:
     description: "The SSH host or IP address of the Swarm manager"
