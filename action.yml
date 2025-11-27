@@ -85,7 +85,6 @@ inputs:
     required: false
     default: "true"
 
-
 runs:
   using: "composite"
   steps:
@@ -109,7 +108,7 @@ runs:
         username: ${{ inputs.user }}
         password: ${{ inputs.pass }}
         key: ${{ inputs.ssh_key }}
-        script_path: ./scripts/remote-commands.sh
+        script_path: ./scripts/remote_commands.sh
 
     - name: "Deployment Summary"
       if: ${{ inputs.summary == 'true' }}
