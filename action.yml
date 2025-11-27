@@ -1,6 +1,7 @@
 name: "Stack Deploy Action"
+authors:
+  - "Mohammed Ramouchy <mramouchy@example.com>"
 description: "GitHub Action to deploy Docker Swarm stacks"
-author: "Mohammed Ramouchy <mramouchy@example.com>"
 branding:
   icon: box
   color: blue
@@ -85,5 +86,31 @@ inputs:
     default: "true"
 
 runs:
-  using: "docker"
-  image: "Dockerfile"
+  using: "composite"
+  steps:
+    - name: Sync files to remote server
+      if: ${{ inputs.sync_path != '' && inputs.sync_files != 'false' }}
+      uses: appleboy/scp-action@v1.0.0
+      with:
+        host: ${{ inputs.host }}
+        username: ${{ inputs.user }}
+        password: ${{ inputs.pass }}
+        port: ${{ inputs.port }}
+        key: ${{ inputs.ssh_key }}
+        source: ./
+        target: ${{ inputs.sync_path }}
+
+    - name: "Deploy Docker Swarm Stack"
+      uses: appleboy/ssh-action@v1.2.3
+      with:
+        host: ${{ inputs.host }}
+        port: ${{ inputs.port }}
+        username: ${{ inputs.user }}
+        password: ${{ inputs.pass }}
+        key: ${{ inputs.ssh_key }}
+        script_path: scripts/remote_commands.sh
+
+    - name: "Deployment Summary"
+      if: ${{ inputs.summary == 'true' }}
+      shell: bash
+      run: scripts/summary.sh
