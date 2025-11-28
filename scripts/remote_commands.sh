@@ -1,17 +1,16 @@
 #!/bin/bash
 
 set -e
-echo "Changing to deployment directory: ${{ inputs.sync_path }}"
-cd ${{ inputs.sync_path }}
+echo "Changing to deployment directory: $INPUT_SYNC_PATH"
+cd $INPUT_SYNC_PATH
 
 echo "::group::Loading environment variables"
 # Load environment variables from specified files or fallback to current behavior
-if [[ -n "${{ inputs.env_files }}" ]]; then
+if [[ -n "$INPUT_ENV_FILES" ]]; then
 # Use specified env_files (single or multiple)
 
 # Process the multi-line input properly by avoiding subshells
-env_files_list=$(echo "${{ inputs.env_files }}" | sed 's/^[[:space:]]*-[[:space:]]*//' | tr '\n' ' ')
-
+env_files_list=$(echo "$INPUT_ENV_FILES" | sed 's/^[[:space:]]*-[[:space:]]*//' | tr '\n' ' ')
 for env_file in $env_files_list; do              
     # Trim whitespace
     env_file=$(echo "$env_file" | xargs)
@@ -30,39 +29,48 @@ fi
 echo "::endgroup::"
 
 # Login to Docker registry if credentials are provided
-if [[ "${{ inputs.registry_auth }}" == 'true' && -n "${{ inputs.registry_host }}" && -n "${{ inputs.registry_user }}" && -n "${{ inputs.registry_pass }}" ]]; then
-echo "::group::Logging into Docker registry: ${{ inputs.registry_host }}"
-echo "${{ inputs.registry_pass }}" | docker login ${{ inputs.registry_host }} -u "${{ inputs.registry_user }}" --password-stdin
+if [[ "$INPUT_REGISTRY_AUTH" == 'true' && -n "$INPUT_REGISTRY_HOST" && -n "$INPUT_REGISTRY_USER" && -n "$INPUT_REGISTRY_PASS" ]]; then
+echo "::group::Logging into Docker registry: $INPUT_REGISTRY_HOST"
+echo "$INPUT_REGISTRY_PASS" | docker login $INPUT_REGISTRY_HOST -u "$INPUT_REGISTRY_USER" --password-stdin
 echo "::endgroup::"
 fi
 
 # Deploy docker stack function
 deploy_stack() {
-local stack_file=$1
-local stack_name=$2
-shift 2
+    local stack_file=$1
+    local stack_name=$2
+    shift 2
 
-# Deploy services
-echo -e "========= 📦 Deploying $stack_name services ========="
-executed_command="docker stack deploy -c $stack_file ${{ inputs.registry_auth && '--with-registry-auth' }} ${{ inputs.prune && '--prune' }} --resolve-image=${{ inputs.resolve_image || 'changed' }} --detach $@ $stack_name"
-echo -e "\033[0;33mCommand: $executed_command\033[0m"
+    # Deploy services
+    echo -e "========= 📦 Deploying $stack_name services ========="
+    registry_auth_flag=""
+    prune_flag=""
+    if [[ "$INPUT_REGISTRY_AUTH" == 'true' ]]; then
+        registry_auth_flag="--with-registry-auth"
+    fi
+    if [[ "$INPUT_PRUNE" == 'true' ]]; then
+        prune_flag="--prune"
+    fi
+    resolve_image_option="${INPUT_RESOLVE_IMAGE:-changed}"
 
-docker stack deploy -c $stack_file ${{ inputs.registry_auth && '--with-registry-auth' }} ${{ inputs.prune && '--prune' }} --resolve-image=${{ inputs.resolve_image || 'changed' }} --detach $@ $stack_name
+    executed_command="docker stack deploy -c $stack_file $registry_auth_flag $prune_flag --resolve-image=$resolve_image_option --detach $@ $stack_name"
+    echo -e "\033[0;33mCommand: $executed_command\033[0m"
+
+    docker stack deploy -c $stack_file $registry_auth_flag $prune_flag --resolve-image=$resolve_image_option --detach $@ $stack_name
 }
 
 # Deploy stack
-echo "Starting deployment of stack: ${{ inputs.stack_name }}"
-if [[ -n "${{ inputs.stack_name }}" ]]
-then
-deploy_stack ${{ inputs.stack_file }} ${{ inputs.stack_name }} ${{ inputs.args }}
+echo "Starting deployment of stack: $INPUT_STACK_NAME"
+if [[ -n "$INPUT_STACK_NAME" ]]; then
+    deploy_stack $INPUT_STACK_FILE $INPUT_STACK_NAME $INPUT_ARGS
 else
-echo "::warning::No stack specified for deployment."
+    echo "::warning::No stack specified for deployment."
 fi
 
 # Cleanup
-if [[ ${{ inputs.cleanup_sync_folder }} == "true" && "${{ inputs.sync_files }}" != "false" ]]
+if [[ "$INPUT_CLEANUP_SYNC_FOLDER" == "true" && "$INPUT_SYNC_FILES" != "false" ]]
 then
-echo "::group::Cleaning up deployment directory"
-rm -rf ${{ inputs.sync_path }}
-echo "::endgroup::"
+    echo "::group::Cleaning up deployment directory"
+    rm -rf $INPUT_SYNC_PATH
+    echo "::endgroup::"
 fi
