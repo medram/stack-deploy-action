@@ -2,14 +2,7 @@
 
 set -e
 
-printenv
-
-# echo "Changing to deployment directory: $INPUT_SYNC_PATH"
-# cd $INPUT_SYNC_PATH
-# echo pwd
-
-# Debug
-# print current user
+# Current User
 echo "Current user: $(whoami)"
 
 DEPLOY_PATH="$INPUT_SYNC_PATH"
