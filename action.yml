@@ -109,7 +109,21 @@ runs:
         password: ${{ inputs.pass }}
         key: ${{ inputs.ssh_key }}
         script_path: ${{ github.action_path }}/scripts/remote_commands.sh
-        all_envs: true
+        allenvs: true # Pass all environment variables to the script
+      env:
+        INPUT_SYNC_PATH: ${{ inputs.sync_path }}
+        INPUT_STACK_NAME: ${{ inputs.stack_name }}
+        INPUT_STACK_FILE: ${{ inputs.stack_file }}
+        INPUT_PRUNE: ${{ inputs.prune }}
+        INPUT_RESOLVE_IMAGE: ${{ inputs.resolve_image }}
+        INPUT_ENV_FILES: ${{ inputs.env_files }}
+        INPUT_ARGS: ${{ inputs.args }}
+        INPUT_REGISTRY_AUTH: ${{ inputs.registry_auth }}
+        INPUT_REGISTRY_HOST: ${{ inputs.registry_host }}
+        INPUT_REGISTRY_USER: ${{ inputs.registry_user }}
+        INPUT_REGISTRY_PASS: ${{ inputs.registry_pass }}
+        INPUT_CLEANUP_SYNC_FOLDER: ${{ inputs.cleanup_sync_folder }}
+        INPUT_SYNC_FILES: ${{ inputs.sync_files }}
 
     - name: "Deployment Summary"
       if: ${{ inputs.summary == 'true' }}
