@@ -1,30 +1,32 @@
 #!/bin/bash
 
 set -e
+
+printenv
+
 echo "Changing to deployment directory: $INPUT_SYNC_PATH"
 cd $INPUT_SYNC_PATH
 
 echo "::group::Loading environment variables"
 # Load environment variables from specified files or fallback to current behavior
 if [[ -n "$INPUT_ENV_FILES" ]]; then
-# Use specified env_files (single or multiple)
+    # Use specified env_files (single or multiple)
+    # Process the multi-line input properly by avoiding subshells
+    env_files_list=$(echo "$INPUT_ENV_FILES" | sed 's/^[[:space:]]*-[[:space:]]*//' | tr '\n' ' ')
+    for env_file in $env_files_list; do              
+        # Trim whitespace
+        env_file=$(echo "$env_file" | xargs)
 
-# Process the multi-line input properly by avoiding subshells
-env_files_list=$(echo "$INPUT_ENV_FILES" | sed 's/^[[:space:]]*-[[:space:]]*//' | tr '\n' ' ')
-for env_file in $env_files_list; do              
-    # Trim whitespace
-    env_file=$(echo "$env_file" | xargs)
-
-    if [[ -f "$env_file" && -s "$env_file" ]]; then
-    echo "$env_file (loaded)"
-    set -a # automatically export all variables
-    # Source the file but ignore errors if it fails to load
-    source "$env_file" || echo "::warning::Failed to source environment file: $env_file"
-    set +a
-    else
-    echo "::warning::Environment file not found: $env_file"
-    fi
-done
+        if [[ -f "$env_file" && -s "$env_file" ]]; then
+        echo "$env_file (loaded)"
+        set -a # automatically export all variables
+        # Source the file but ignore errors if it fails to load
+        source "$env_file" || echo "::warning::Failed to source environment file: $env_file"
+        set +a
+        else
+        echo "::warning::Environment file not found: $env_file"
+        fi
+    done
 fi
 echo "::endgroup::"
 

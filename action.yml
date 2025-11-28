@@ -109,7 +109,7 @@ runs:
         password: ${{ inputs.pass }}
         key: ${{ inputs.ssh_key }}
         script_path: ${{ github.action_path }}/scripts/remote_commands.sh
-        allenvs: true
+        all_envs: true
 
     - name: "Deployment Summary"
       if: ${{ inputs.summary == 'true' }}
