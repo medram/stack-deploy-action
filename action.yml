@@ -102,6 +102,15 @@ runs:
 
     - name: "Deploy Docker Swarm Stack"
       uses: appleboy/ssh-action@v1.2.3
+      with:
+        host: ${{ inputs.host }}
+        port: ${{ inputs.port }}
+        username: ${{ inputs.user }}
+        password: ${{ inputs.pass }}
+        key: ${{ inputs.ssh_key }}
+        script_path: ${{ github.action_path }}/scripts/remote_commands.sh
+        envs: INPUT_SYNC_PATH,INPUT_STACK_NAME,INPUT_STACK_FILE,INPUT_PRUNE,INPUT_RESOLVE_IMAGE,INPUT_ENV_FILES,INPUT_ARGS,INPUT_REGISTRY_AUTH,INPUT_REGISTRY_HOST,INPUT_REGISTRY_USER,INPUT_REGISTRY_PASS,INPUT_CLEANUP_SYNC_FOLDER,INPUT_SYNC_FILES
+        # allenvs: true # Pass all environment variables to the script
       env:
         INPUT_SYNC_PATH: ${{ inputs.sync_path }}
         INPUT_STACK_NAME: ${{ inputs.stack_name }}
@@ -116,14 +125,6 @@ runs:
         INPUT_REGISTRY_PASS: ${{ inputs.registry_pass }}
         INPUT_CLEANUP_SYNC_FOLDER: ${{ inputs.cleanup_sync_folder }}
         INPUT_SYNC_FILES: ${{ inputs.sync_files }}
-      with:
-        host: ${{ inputs.host }}
-        port: ${{ inputs.port }}
-        username: ${{ inputs.user }}
-        password: ${{ inputs.pass }}
-        key: ${{ inputs.ssh_key }}
-        script_path: ${{ github.action_path }}/scripts/remote_commands.sh
-        allenvs: true # Pass all environment variables to the script
 
     - name: "Deployment Summary"
       if: ${{ inputs.summary == 'true' }}
