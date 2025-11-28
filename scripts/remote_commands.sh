@@ -4,9 +4,14 @@ set -e
 
 printenv
 
-echo "Changing to deployment directory: $INPUT_SYNC_PATH"
-cd $INPUT_SYNC_PATH
+# echo "Changing to deployment directory: $INPUT_SYNC_PATH"
+# cd $INPUT_SYNC_PATH
+# echo pwd
+
+echo "Changing to deployment directory: /home/mrmed/.deploy/my-cloud-architecture"
+ls -lahp /home/mrmed/.deploy/my-cloud-architecture
 echo pwd
+cd /home/mrmed/.deploy/my-cloud-architecture
 
 echo "::group::Loading environment variables"
 # Load environment variables from specified files or fallback to current behavior
