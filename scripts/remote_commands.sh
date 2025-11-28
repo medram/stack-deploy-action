@@ -8,15 +8,22 @@ printenv
 # cd $INPUT_SYNC_PATH
 # echo pwd
 
-echo "Changing to deployment directory: /home/mrmed/.deploy/my-cloud-architecture"
-ls -lahp /home/mrmed/.deploy/my-cloud-architecture
-echo pwd
-cd /home/mrmed/.deploy/my-cloud-architecture
+# Debug
+# print current user
+echo "Current user: $(whoami)"
+
+DEPLOY_PATH="$INPUT_SYNC_PATH"
+# Replace ~ with $HOME if present at the start
+if [[ "$INPUT_SYNC_PATH" == ~* ]]; then
+    DEPLOY_PATH="${HOME}${DEPLOY_PATH:1}"
+fi
+echo "Changing to deployment directory: $DEPLOY_PATH"
+cd $DEPLOY_PATH
+
 
 echo "::group::Loading environment variables"
 # Load environment variables from specified files or fallback to current behavior
 if [[ -n "$INPUT_ENV_FILES" ]]; then
-    echo "in .... ;D"
     # Use specified env_files (single or multiple)
     # Process the multi-line input properly by avoiding subshells
     env_files_list=$(echo "$INPUT_ENV_FILES" | sed 's/^[[:space:]]*-[[:space:]]*//' | tr '\n' ' ')
